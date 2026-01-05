@@ -7,6 +7,8 @@ The original release by Badger hasn't been updated in six years as of writing th
 - [x] [ox_lib](https://github.com/CommunityOx/ox_lib)
 - [x] [ps_dispatch](https://github.com/Project-Sloth/ps-dispatch/tree/main)
 
+# Old readme begins below
+
 ## Continued Documentation
 https://docs.badger.store/fivem-misc.-scripts/badgerbankrobbery
 
