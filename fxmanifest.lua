@@ -9,6 +9,7 @@ lua54 'yes'
 
 shared_scripts {
 	"config.lua",
+    -- '@ox_lib/init.lua' -- uncomment and enable useOx in config if you wish to use ox_lib
 }
 
 client_scripts {
@@ -18,3 +19,4 @@ client_scripts {
 server_scripts {
 	"server.lua"
 }
+
