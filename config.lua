@@ -1,5 +1,6 @@
 config = {
-	useOx = false, -- use ox_lib for notifications and more
+	useOx = false, -- use ox_lib for progressbars and the such
+	useOxNotify = false, -- use ox_lib notifications
 	
 	timeToRob = 60, -- In seconds
 	robberyCooldown = 15, -- In minutes
@@ -122,3 +123,4 @@ config = {
 	
 
 }
+
