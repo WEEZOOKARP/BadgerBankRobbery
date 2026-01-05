@@ -1,4 +1,6 @@
 config = {
+	useOx = false, -- use ox_lib for notifications and more
+	
 	timeToRob = 60, -- In seconds
 	robberyCooldown = 15, -- In minutes
 	robbingStr = "Breaking into the Safe...",
@@ -118,4 +120,5 @@ config = {
 	}
 
 	
+
 }
