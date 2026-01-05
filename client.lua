@@ -8,40 +8,71 @@ AddEventHandler('BadgerBankRobbery:IsActive:Return', function(bool)
 	robberyActive = bool
 end)
 
-local function DisplayNotification( text )
-    SetNotificationTextEntry( "STRING" )
-    AddTextComponentString( text )
-    DrawNotification( false, false )
+local function DisplayNotification( text, context )
+	if useOxNotify then
+		lib.notify({
+		    title = 'Robbery',
+		    description = 'text',
+		    type = context
+		})
+	else
+	    SetNotificationTextEntry( "STRING" )
+	    AddTextComponentString( text )
+	    DrawNotification( false, false )
+	end
 end
 
 local function BeginProgressBar()
-	TriggerEvent("mythic_progressbar:client:progress", {
-		name = "RobbingTheBank",
-		duration = (1000 * config.timeToRob), -- 1000ms * x seconds
-		label = config.robbingStr,
-		useWhileDead = false,
-		canCancel = false,
-		controlDisables = {
-			disableMovement = true,
-			disableCarMovement = true,
-			disableMouse = false,
-			disableCombat = true,
-		},
-		animation = {
-			animDict = "anim@amb@clubhouse@tutorial@bkr_tut_ig3@",
-			anim = "machinic_loop_mechandplayer",
-			flags = 49,
-		},
-		prop = {
-			model = "prop_ing_crowbar",
-		}
-	}, function(status)
-		if not status and not IsEntityDead(PlayerPedId()) then
-			return true
-		else
-			return false
-		end
-	end)
+	if config.useOx then
+		return lib.progressBar({
+		    duration = (1000 * config.timeToRob),
+		    label = config.robbingStr,
+		    useWhileDead = false,
+		    canCancel = true,
+		    disable = {
+		        car = true,
+				move = true,
+				combat = true,
+		    },
+		    anim = {
+		        dict = 'anim@amb@clubhouse@tutorial@bkr_tut_ig3@',
+		        clip = 'machinic_loop_mechandplayer'
+		    },
+		    prop = {
+		        model = `prop_ing_crowbar`,
+		        pos = vec3(0.03, 0.03, 0.02),
+		        rot = vec3(0.0, 0.0, -1.5)
+		    },
+		})
+	else
+		TriggerEvent("mythic_progressbar:client:progress", {
+			name = "RobbingTheBank",
+			duration = (1000 * config.timeToRob), -- 1000ms * x seconds
+			label = config.robbingStr,
+			useWhileDead = false,
+			canCancel = false,
+			controlDisables = {
+				disableMovement = true,
+				disableCarMovement = true,
+				disableMouse = false,
+				disableCombat = true,
+			},
+			animation = {
+				animDict = "anim@amb@clubhouse@tutorial@bkr_tut_ig3@",
+				anim = "machinic_loop_mechandplayer",
+				flags = 49,
+			},
+			prop = {
+				model = "prop_ing_crowbar",
+			}
+		}, function(status)
+			if not status and not IsEntityDead(PlayerPedId()) then
+				return true
+			else
+				return false
+			end
+		end)
+	end
 end
 
 Citizen.CreateThread(function()
@@ -52,188 +83,187 @@ Citizen.CreateThread(function()
 			-- Bank Code
 			local coords = GetEntityCoords(PlayerPedId())
 			if (config.enableBanks) then
-			for _, bankcoords in pairs(config.bankcoords) do
-				if #(vector3(coords.x, coords.y, coords.z) - bankcoords) < 5.0 then
-					DrawMarker(27, bankcoords.x, bankcoords.y, bankcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
-					DisplayNotification('~r~Press the ~w~E ~r~key to rob the bank')
-					if IsControlJustReleased(0, 38) then -- E key
-						TriggerServerEvent('BadgerBankRobbery:SetActive', true)
-						TriggerServerEvent('PrintBR:PrintMessage', bankcoords.alarm)
-						if (config.displayBlips == true) then
-							bankcoords.blip = AddBlipForCoord(bankcoords.x, bankcoords.y, bankcoords.z)
-							SetBlipSprite(bankcoords.blip, 353)
-							SetBlipFlashTimer(bankcoords.blip, 1000 * config.timeToRob)
-							SetBlipAsShortRange(bankcoords.blip, true)
-							BeginTextCommandSetBlipName("STRING")
-							AddTextComponentString(bankcoords.name)
-							EndTextCommandSetBlipName(bankcoords.blip)
+				for _, bankcoords in pairs(config.bankcoords) do
+					if #(vector3(coords.x, coords.y, coords.z) - bankcoords) < 5.0 then
+						DrawMarker(27, bankcoords.x, bankcoords.y, bankcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
+						DisplayNotification('~r~Press the ~w~E ~r~key to rob the bank')
+						if IsControlJustReleased(0, 38) then -- E key
+							TriggerServerEvent('BadgerBankRobbery:SetActive', true)
+							if usePsDispatch then
+								exports['ps-dispatch']:FleecaBankRobbery("none")
+							else
+								TriggerServerEvent('PrintBR:PrintMessage', bankcoords.alarm)
+							end
+							if (config.displayBlips == true) then
+								bankcoords.blip = AddBlipForCoord(bankcoords.x, bankcoords.y, bankcoords.z)
+								SetBlipSprite(bankcoords.blip, 353)
+								SetBlipFlashTimer(bankcoords.blip, 1000 * config.timeToRob)
+								SetBlipAsShortRange(bankcoords.blip, true)
+								BeginTextCommandSetBlipName("STRING")
+								AddTextComponentString(bankcoords.name)
+								EndTextCommandSetBlipName(bankcoords.blip)
+							end
+							local success = BeginProgressBar()
+							if success then
+								DisplayNotification('~g~Success: You have robbed the bank successfully!', "success")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
+							else
+								DisplayNotification('~r~Failed: Your bank robbery has failed.', "error")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
+							end
+							Wait(1000 * config.timeToRob)
+							RemoveBlip(bankcoords.blip)
 						end
-						local success = BeginProgressBar()
-						if success then
-							DisplayNotification('~g~Success: You have robbed the bank successfully!')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
-						else
-							DisplayNotification('~r~Failed: Your bank robbery has failed.')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
-						end
-						Wait(1000 * config.timeToRob)
-						RemoveBlip(bankcoords.blip)
 					end
 				end
 			end
-		end
 
 			-- Ammunation Code
 			if (config.enableAmmunations == true) then
-			for _, ammunationcoords in pairs(config.ammunationcoords) do
-				if #(vector3(coords.x, coords.y, coords.z) - ammunationcoords) < 5.0 then
-					DrawMarker(27, ammunationcoords.x, ammunationcoords.y, ammunationcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
-					DisplayNotification('~r~Press the ~w~E ~r~key to rob the Ammunation')
-					if IsControlJustReleased(0, 38) then -- E
-						TriggerServerEvent('PrintBR:PrintMessage', ammunationcoords.alarm)
-						TriggerServerEvent('BadgerBankRobbery:SetActive', true)
-						if (config.displayBlips == true) then
-							ammunationcoords.blip = AddBlipForCoord(ammunationcoords.x, ammunationcoords.y, ammunationcoords.z)
-							SetBlipSprite(ammunationcoords.blip, 353)
-							SetBlipFlashTimer(ammunationcoords.blip, 1000 * config.timeToRob)
-							SetBlipAsShortRange(ammunationcoords.blip, true)
-							BeginTextCommandSetBlipName("STRING")
-							AddTextComponentString(ammunationcoords.name)
-							EndTextCommandSetBlipName(ammunationcoords.blip)
+				for _, ammunationcoords in pairs(config.ammunationcoords) do
+					if #(vector3(coords.x, coords.y, coords.z) - ammunationcoords) < 5.0 then
+						DrawMarker(27, ammunationcoords.x, ammunationcoords.y, ammunationcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
+						DisplayNotification('~r~Press the ~w~E ~r~key to rob the Ammunation')
+						if IsControlJustReleased(0, 38) then -- E
+							if usePsDispatch then
+								exports['ps-dispatch']:StoreRobbery("none")
+							else
+								TriggerServerEvent('PrintBR:PrintMessage', ammunationcoords.alarm)
+							end
+							TriggerServerEvent('BadgerBankRobbery:SetActive', true)
+							if (config.displayBlips == true) then
+								ammunationcoords.blip = AddBlipForCoord(ammunationcoords.x, ammunationcoords.y, ammunationcoords.z)
+								SetBlipSprite(ammunationcoords.blip, 353)
+								SetBlipFlashTimer(ammunationcoords.blip, 1000 * config.timeToRob)
+								SetBlipAsShortRange(ammunationcoords.blip, true)
+								BeginTextCommandSetBlipName("STRING")
+								AddTextComponentString(ammunationcoords.name)
+								EndTextCommandSetBlipName(ammunationcoords.blip)
+							end
+							local success = BeginProgressBar()
+							if success then
+								DisplayNotification('~g~Success: You have robbed the Ammunation successfully!', "success")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
+							else
+								DisplayNotification('~r~Failed: Your Ammunation robbery has failed.', "error")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
+							end
+							Wait(1000 * config.timeToRob)
+							RemoveBlip(ammunationcoords.blip)
 						end
-						local success = BeginProgressBar()
-						if success then
-							DisplayNotification('~g~Success: You have robbed the Ammunation successfully!')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
-						else
-							DisplayNotification('~r~Failed: Your Ammunation robbery has failed.')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
-						end
-						Wait(1000 * config.timeToRob)
-						RemoveBlip(ammunationcoords.blip)
 					end
 				end
-			end
 			end
 
 			-- 24/7 Code
 			if (config.enable247) then
-			for _, shopcoords in pairs(config.shopcoords) do
-				if #(vector3(coords.x, coords.y, coords.z) - shopcoords) < 5.0 then
-					DrawMarker(27, shopcoords.x, shopcoords.y, shopcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
-					DisplayNotification('~r~Press the ~w~E ~r~key to rob the 24/7')
-					if IsControlJustReleased(0, 38) then -- E
-						TriggerServerEvent('PrintBR:PrintMessage', shopcoords.alarm)
-						TriggerServerEvent('BadgerBankRobbery:SetActive', true)
-						if (config.displayBlips == true) then
-							shopcoords.blip = AddBlipForCoord(shopcoords.x, shopcoords.y, shopcoords.z)
-							SetBlipSprite(shopcoords.blip, 353)
-							SetBlipFlashTimer(shopcoords.blip, 1000 * config.timeToRob)
-							SetBlipAsShortRange(shopcoords.blip, true)
-							BeginTextCommandSetBlipName("STRING")
-							AddTextComponentString(shopcoords.name)
-							EndTextCommandSetBlipName(shopcoords.blip)
+				for _, shopcoords in pairs(config.shopcoords) do
+					if #(vector3(coords.x, coords.y, coords.z) - shopcoords) < 5.0 then
+						DrawMarker(27, shopcoords.x, shopcoords.y, shopcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
+						DisplayNotification('~r~Press the ~w~E ~r~key to rob the 24/7')
+						if IsControlJustReleased(0, 38) then -- E
+							if usePsDispatch then
+								exports['ps-dispatch']:StoreRobbery("none")
+							else
+								TriggerServerEvent('PrintBR:PrintMessage', shopcoords.alarm)
+							end
+							TriggerServerEvent('BadgerBankRobbery:SetActive', true)
+							if (config.displayBlips == true) then
+								shopcoords.blip = AddBlipForCoord(shopcoords.x, shopcoords.y, shopcoords.z)
+								SetBlipSprite(shopcoords.blip, 353)
+								SetBlipFlashTimer(shopcoords.blip, 1000 * config.timeToRob)
+								SetBlipAsShortRange(shopcoords.blip, true)
+								BeginTextCommandSetBlipName("STRING")
+								AddTextComponentString(shopcoords.name)
+								EndTextCommandSetBlipName(shopcoords.blip)
+							end
+							local success = BeginProgressBar()
+							if success then
+								DisplayNotification('~g~Success: You have robbed the 24/7 successfully!', "success")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
+							else
+								DisplayNotification('~r~Failed: Your 24/7 robbery has failed.', "error")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
+							end
+							Wait(1000 * config.timeToRob)
+							RemoveBlip(shopcoords.blip)
 						end
-						local success = BeginProgressBar()
-						if success then
-							DisplayNotification('~g~Success: You have robbed the 24/7 successfully!')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
-						else
-							DisplayNotification('~r~Failed: Your 24/7 robbery has failed.')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
-						end
-						Wait(1000 * config.timeToRob)
-						RemoveBlip(shopcoords.blip)
 					end
 				end
-			end
 			end
 
 			-- LTD Code
 			if (config.enableGasStations) then
-			for _, ltdcoords in pairs(config.ltdcoords) do
-				if #(vector3(coords.x, coords.y, coords.z) - ltdcoords) < 5.0 then
-					DrawMarker(27, ltdcoords.x, ltdcoords.y, ltdcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
-					DisplayNotification('~r~Press the ~w~E ~r~key to rob the LTD Gas Station')
-					if IsControlJustReleased(0, 38) then -- E
-						TriggerServerEvent('PrintBR:PrintMessage', ltdcoords.alarm)
-						TriggerServerEvent('BadgerBankRobbery:SetActive', true)
-						if (config.displayBlips == true) then
-							ltdcoords.blip = AddBlipForCoord(ltdcoords.x, ltdcoords.y, ltdcoords.z)
-							SetBlipSprite(ltdcoords.blip, 353)
-							SetBlipFlashTimer(ltdcoords.blip, 1000 * config.timeToRob)
-							SetBlipAsShortRange(ltdcoords.blip, true)
-							BeginTextCommandSetBlipName("STRING")
-							AddTextComponentString(ltdcoords.name)
-							EndTextCommandSetBlipName(ltdcoords.blip)
+				for _, ltdcoords in pairs(config.ltdcoords) do
+					if #(vector3(coords.x, coords.y, coords.z) - ltdcoords) < 5.0 then
+						DrawMarker(27, ltdcoords.x, ltdcoords.y, ltdcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
+						DisplayNotification('~r~Press the ~w~E ~r~key to rob the LTD Gas Station')
+						if IsControlJustReleased(0, 38) then -- E
+							if usePsDispatch then
+								exports['ps-dispatch']:StoreRobbery("none")
+							else
+								TriggerServerEvent('PrintBR:PrintMessage', ltdcoords.alarm)
+							end
+							TriggerServerEvent('BadgerBankRobbery:SetActive', true)
+							if (config.displayBlips == true) then
+								ltdcoords.blip = AddBlipForCoord(ltdcoords.x, ltdcoords.y, ltdcoords.z)
+								SetBlipSprite(ltdcoords.blip, 353)
+								SetBlipFlashTimer(ltdcoords.blip, 1000 * config.timeToRob)
+								SetBlipAsShortRange(ltdcoords.blip, true)
+								BeginTextCommandSetBlipName("STRING")
+								AddTextComponentString(ltdcoords.name)
+								EndTextCommandSetBlipName(ltdcoords.blip)
+							end
+							local success = BeginProgressBar()
+							if success then
+								DisplayNotification('~g~Success: You have robbed the LTD Gas Station successfully!', "success")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
+							else
+								DisplayNotification('~r~Failed: Your LTD Gas Station robbery has failed.', "error")
+								TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
+							end
+							Wait(1000 * config.timeToRob)
+							RemoveBlip(ltdcoords.blip)
 						end
-						local success = BeginProgressBar()
-						if success then
-							DisplayNotification('~g~Success: You have robbed the LTD Gas Station successfully!')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
-						else
-							DisplayNotification('~r~Failed: Your LTD Gas Station robbery has failed.')
-							TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
-						end
-						Wait(1000 * config.timeToRob)
-						RemoveBlip(ltdcoords.blip)
 					end
 				end
 			end
-		end
 
 			-- Liquor Store Code
 			if (config.enableLiquor) then
-			for _, liquorcoords in pairs(config.liquorcoords) do
-				if #(vector3(coords.x, coords.y, coords.z) - liquorcoords) < 5.0 then
-					DrawMarker(27, liquorcoords.x, liquorcoords.y, liquorcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
-					DisplayNotification('~r~Press the ~w~E ~r~key to rob the Liquor Store')
-					if IsControlJustReleased(0, 38) then -- E
-						TriggerServerEvent('PrintBR:PrintMessage', liquorcoords.alarm)
-						TriggerServerEvent('BadgerBankRobbery:SetActive', true)
-						if (config.displayBlips == true) then
-							liquorcoords.blip = AddBlipForCoord(liquorcoords.x, liquorcoords.y, liquorcoords.z)
-							SetBlipSprite(liquorcoords.blip, 353)
-							SetBlipFlashTimer(liquorcoords.blip, 1000 * config.timeToRob)
-							SetBlipAsShortRange(liquorcoords.blip, true)
-							BeginTextCommandSetBlipName("STRING")
-							AddTextComponentString(liquorcoords.name)
-							EndTextCommandSetBlipName(liquorcoords.blip)
-						end
-						TriggerEvent("mythic_progressbar:client:progress", {
-							name = "RobbingTheBank",
-							duration = (1000 * config.timeToRob), -- 1000ms * x seconds
-							label = config.robbingStr,
-							useWhileDead = false,
-							canCancel = false,
-							controlDisables = {
-								disableMovement = true,
-								disableCarMovement = true,
-								disableMouse = false,
-								disableCombat = true,
-							},
-							animation = {
-								animDict = "anim@amb@clubhouse@tutorial@bkr_tut_ig3@",
-								anim = "machinic_loop_mechandplayer",
-								flags = 49,
-							},
-							prop = {
-								model = "prop_ing_crowbar",
-							}
-						}, function(status)
-							if not status and not IsEntityDead(GetPlayerPed(-1)) then
-								DisplayNotification('~g~Success: You have robbed the Liquor Store successfully!')
+				for _, liquorcoords in pairs(config.liquorcoords) do
+					if #(vector3(coords.x, coords.y, coords.z) - liquorcoords) < 5.0 then
+						DrawMarker(27, liquorcoords.x, liquorcoords.y, liquorcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
+						DisplayNotification('~r~Press the ~w~E ~r~key to rob the Liquor Store')
+						if IsControlJustReleased(0, 38) then -- E
+							if usePsDispatch then
+								exports['ps-dispatch']:StoreRobbery("none")
+							else
+								TriggerServerEvent('PrintBR:PrintMessage', liquorcoords.alarm)
+							end
+							TriggerServerEvent('BadgerBankRobbery:SetActive', true)
+							if (config.displayBlips == true) then
+								liquorcoords.blip = AddBlipForCoord(liquorcoords.x, liquorcoords.y, liquorcoords.z)
+								SetBlipSprite(liquorcoords.blip, 353)
+								SetBlipFlashTimer(liquorcoords.blip, 1000 * config.timeToRob)
+								SetBlipAsShortRange(liquorcoords.blip, true)
+								BeginTextCommandSetBlipName("STRING")
+								AddTextComponentString(liquorcoords.name)
+								EndTextCommandSetBlipName(liquorcoords.blip)
+							end
+							local success = BeginProgressBar()
+							if success then
+								DisplayNotification('~g~Success: You have robbed the Liquor Store successfully!', "success")
 								TriggerServerEvent('PrintBR:PrintMessage', config.robberySuccess)
 							else
-								DisplayNotification('~r~Failed: Your Liquor Store robbery has failed.')
+								DisplayNotification('~r~Failed: Your Liquor Store robbery has failed.', "error")
 								TriggerServerEvent('PrintBR:PrintMessage', config.robberyFailed)
 							end
-						end)
-						Wait(1000 * config.timeToRob)
-						RemoveBlip(liquorcoords.blip)
+							Wait(1000 * config.timeToRob)
+							RemoveBlip(liquorcoords.blip)
+						end
 					end
 				end
-			end
 			end
 		end
 	end
@@ -245,5 +275,3 @@ Citizen.CreateThread(function()
 		TriggerServerEvent('BadgerBankRobbery:IsActive')
 	end
 end)
-
-
