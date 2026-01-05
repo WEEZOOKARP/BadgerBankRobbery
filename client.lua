@@ -2,6 +2,15 @@
 --- BadgerBankRobbery ---
 -------------------------
 
+-- go to the fxmanifest and uncomment the line under shared_scripts
+if useOx or useOxNotify then
+	if lib == nil then
+		print("Ox_lib wasn't imported correctly, double check the fxmanifest and your load order.")
+		useOx = false
+		useOxNotify = false
+	end
+end
+
 robberyActive = false
 RegisterNetEvent('BadgerBankRobbery:IsActive:Return')
 AddEventHandler('BadgerBankRobbery:IsActive:Return', function(bool)
@@ -275,3 +284,4 @@ Citizen.CreateThread(function()
 		TriggerServerEvent('BadgerBankRobbery:IsActive')
 	end
 end)
+
