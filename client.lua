@@ -36,7 +36,7 @@ local function BeginProgressBar()
 			model = "prop_ing_crowbar",
 		}
 	}, function(status)
-		if not status and not IsEntityDead(GetPlayerPed(-1)) then
+		if not status and not IsEntityDead(PlayerPedId()) then
 			return true
 		else
 			return false
@@ -245,4 +245,5 @@ Citizen.CreateThread(function()
 		TriggerServerEvent('BadgerBankRobbery:IsActive')
 	end
 end)
+
 
