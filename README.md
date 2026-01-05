@@ -1,4 +1,8 @@
 # BadgerBankRobbery
+
+A classic on vMenu servers, this script serves as a simple way to have heists on a vMenu based server.
+The original release by Badger hasn't been updated in six years as of writing this, and has many areas in which it could be improved. This fork provides a rewritten version of BadgerBankRobbery with improvements for client performance.
+
 ## Continued Documentation
 https://docs.badger.store/fivem-misc.-scripts/badgerbankrobbery
 
