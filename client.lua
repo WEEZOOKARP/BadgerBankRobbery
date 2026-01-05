@@ -21,7 +21,7 @@ local function DisplayNotification( text, context )
 	if useOxNotify then
 		lib.notify({
 		    title = 'Robbery',
-		    description = 'text',
+		    description = text,
 		    type = context
 		})
 	else
