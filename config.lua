@@ -1,6 +1,8 @@
 config = {
 	useOx = false, -- use ox_lib for progressbars and the such
 	useOxNotify = false, -- use ox_lib notifications
+
+	usePsDispatch = false, -- Use ps-dispatch for ems alerts
 	
 	timeToRob = 60, -- In seconds
 	robberyCooldown = 15, -- In minutes
@@ -123,4 +125,5 @@ config = {
 	
 
 }
+
 
