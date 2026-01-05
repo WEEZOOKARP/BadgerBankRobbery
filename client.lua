@@ -50,10 +50,10 @@ Citizen.CreateThread(function()
 
 		if not robberyActive then
 			-- Bank Code
-			local coords = GetEntityCoords(GetPlayerPed(-1))
+			local coords = GetEntityCoords(PlayerPedId())
 			if (config.enableBanks) then
 			for _, bankcoords in pairs(config.bankcoords) do
-				if #(coords - bankcoords) < 5.0 then
+				if #(vector3(coords.x, coords.y, coords.z) - bankcoords) < 5.0 then
 					DrawMarker(27, bankcoords.x, bankcoords.y, bankcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, 4.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
 					DisplayNotification('~r~Press the ~w~E ~r~key to rob the bank')
 					if IsControlJustReleased(0, 38) then -- E key
@@ -86,7 +86,7 @@ Citizen.CreateThread(function()
 			-- Ammunation Code
 			if (config.enableAmmunations == true) then
 			for _, ammunationcoords in pairs(config.ammunationcoords) do
-				if #(coords - ammunationcoords) < 5.0 then
+				if #(vector3(coords.x, coords.y, coords.z) - ammunationcoords) < 5.0 then
 					DrawMarker(27, ammunationcoords.x, ammunationcoords.y, ammunationcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
 					DisplayNotification('~r~Press the ~w~E ~r~key to rob the Ammunation')
 					if IsControlJustReleased(0, 38) then -- E
@@ -119,7 +119,7 @@ Citizen.CreateThread(function()
 			-- 24/7 Code
 			if (config.enable247) then
 			for _, shopcoords in pairs(config.shopcoords) do
-				if #(coords - shopcoords) < 5.0 then
+				if #(vector3(coords.x, coords.y, coords.z) - shopcoords) < 5.0 then
 					DrawMarker(27, shopcoords.x, shopcoords.y, shopcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
 					DisplayNotification('~r~Press the ~w~E ~r~key to rob the 24/7')
 					if IsControlJustReleased(0, 38) then -- E
@@ -152,7 +152,7 @@ Citizen.CreateThread(function()
 			-- LTD Code
 			if (config.enableGasStations) then
 			for _, ltdcoords in pairs(config.ltdcoords) do
-				if #(coords - ltdcoords) < 5.0 then
+				if #(vector3(coords.x, coords.y, coords.z) - ltdcoords) < 5.0 then
 					DrawMarker(27, ltdcoords.x, ltdcoords.y, ltdcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
 					DisplayNotification('~r~Press the ~w~E ~r~key to rob the LTD Gas Station')
 					if IsControlJustReleased(0, 38) then -- E
@@ -185,7 +185,7 @@ Citizen.CreateThread(function()
 			-- Liquor Store Code
 			if (config.enableLiquor) then
 			for _, liquorcoords in pairs(config.liquorcoords) do
-				if #(coords - liquorcoords) < 5.0 then
+				if #(vector3(coords.x, coords.y, coords.z) - liquorcoords) < 5.0 then
 					DrawMarker(27, liquorcoords.x, liquorcoords.y, liquorcoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, .2, 255, 0, 0, 255, false, true, 2, false, nil, nil, false)
 					DisplayNotification('~r~Press the ~w~E ~r~key to rob the Liquor Store')
 					if IsControlJustReleased(0, 38) then -- E
@@ -245,3 +245,4 @@ Citizen.CreateThread(function()
 		TriggerServerEvent('BadgerBankRobbery:IsActive')
 	end
 end)
+
