@@ -1,8 +1,8 @@
 fx_version 'cerulean'
 game 'gta5'
 
-author 'Badger'
-description 'XPRESS RP | Extra functions for police'
+author 'Badger & WEEZOOKA'
+description 'BadgerBankRobbery Rewritten'
 version '1.0.0'
 
 lua54 'yes'
@@ -19,4 +19,5 @@ client_scripts {
 server_scripts {
 	"server.lua"
 }
+
 
